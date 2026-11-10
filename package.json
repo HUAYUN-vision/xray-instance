@@ -1,6 +1,6 @@
 {
   "name": "xray-wrapper",
-  "version": "1.1.4",
+  "version": "1.0.0",
   "description": "Xray Server instance powered HTTP API",
   "author": "passimx",
   "private": false,
