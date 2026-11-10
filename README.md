@@ -27,7 +27,15 @@ Docker-образ с [Xray](https://github.com/XTLS/Xray-core) (VLESS + Reality)
 
 Путь `/commands` намеренно без префикса и версии (`GLOBAL_PREFIX` пустой, контроллер `VERSION_NEUTRAL`): его вызывает `passimx-vpn-bot` по адресу `http://<host>:440/commands`. Если команда завершилась с ненулевым кодом или что-то написала в `stderr`, выполнение останавливается и API отвечает `400`.
 
-> ⚠️ Эндпоинт выполняет произвольные команды от root и не требует авторизации. Порт API должен быть доступен только управляющему серверу (firewall / allowlist).
+`/commands` требует заголовок `X-API-Key` со значением `API_KEY` из env (иначе `401`). Без `API_KEY` (минимум 32 символа) приложение не стартует. Сгенерировать ключ можно так: `openssl rand -hex 32`.
+
+```bash
+curl -X POST http://<host>:440/commands \
+  -H 'Content-Type: application/json' -H "X-API-Key: $API_KEY" \
+  -d '{"commands":["xray version"]}'
+```
+
+> ⚠️ Эндпоинт выполняет произвольные команды от root. Помимо ключа, держите порт API открытым только для управляющего сервера (firewall / allowlist).
 
 ## Xray
 
@@ -56,9 +64,20 @@ npm run start:dev
 Деплой на сервер:
 
 ```bash
-cp .env.example .env   # API_PORT, XRAY_PORT
+cp .env.example .env   # API_KEY, API_PORT, XRAY_PORT
 docker compose up -d   # xray + watchtower (автообновление образа)
 ```
+
+## CI/CD и версии
+
+Пайплайн берётся из [`HUAYUN-vision/ci-cd-workflows`](https://github.com/HUAYUN-vision/ci-cd-workflows) (`@v1`), как в шаблоне:
+
+- PR: lint, typecheck, тесты, сборка образа + Trivy, проверка заголовка PR (Conventional Commits).
+- `main`: `version.yml` считает версию по коммитам с последнего тега `vX.Y.Z` (`feat` → minor, `fix`/`perf` → patch, `!`/`BREAKING CHANGE` → major), коммитит `chore(release): vX.Y.Z`, ставит тег и создаёт GitHub Release.
+- После релиза образ публикуется в `ghcr.io/huayun-vision/xray-instance` с тегами `X.Y.Z`, `X.Y`, `X`, `latest`.
+- На серверах watchtower следит за `:latest` и обновляет контейнер сам.
+
+semantic-release не используется. Теги без префикса (`1.1.4` и раньше) остались от старого пайплайна, отсчёт идёт от `v1.1.4`.
 
 ## Скрипты
 

@@ -19,7 +19,7 @@ import { HealthModule } from './modules/health/health.module';
             ? undefined
             : { target: 'pino-pretty', options: { singleLine: true, colorize: true } },
           autoLogging: { ignore: (req) => req.url?.includes('/health') ?? false },
-          redact: ['req.headers.authorization', 'req.headers.cookie'],
+          redact: ['req.headers.authorization', 'req.headers.cookie', 'req.headers["x-api-key"]'],
         },
       }),
     }),

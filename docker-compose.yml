@@ -1,6 +1,6 @@
 services:
   xray:
-    image: ghcr.io/passimx/xray-server-instance:dev
+    image: ghcr.io/huayun-vision/xray-instance:latest
     container_name: xray
     restart: always
     env_file: .env

@@ -10,6 +10,9 @@ export const envSchema = z.object({
     .enum(['true', 'false'])
     .default('false')
     .transform((v) => v === 'true'),
+
+  /** Ключ для `X-API-Key` (POST /commands). Генерация: `openssl rand -hex 32`. */
+  API_KEY: z.string().min(32, 'API_KEY must be at least 32 characters'),
 });
 
 export type Env = z.infer<typeof envSchema>;
