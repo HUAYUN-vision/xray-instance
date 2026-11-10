@@ -36,6 +36,8 @@ jobs:
     uses: HUAYUN-vision/ci-cd-workflows/.github/workflows/version.yml@v1
     permissions:
       contents: write
+      issues: write # @semantic-release/github: комментарии к релизным issues
+      pull-requests: write # @semantic-release/github: комментарии к релизным PR
     # secrets:
     #   token: ${{ secrets.RELEASE_TOKEN }} # если main защищена от прямого push
 
