@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   xray:
     image: ghcr.io/passimx/xray-server-instance:dev
@@ -7,17 +5,18 @@ services:
     restart: always
     env_file: .env
     environment:
-      - TZ=Europe/Amsterdam
-      - XRAY_PORT=${XRAY_PORT:-443}
-      - API_PORT=${API_PORT:-440}
+      TZ: Europe/Amsterdam
+      NODE_ENV: production
+      XRAY_PORT: ${XRAY_PORT:-443}
+      API_PORT: ${API_PORT:-440}
     volumes:
       - ./xray/data:/xray/data
       - ./xray/logs:/xray/logs
     networks:
       - network
     ports:
-      - ${XRAY_PORT:-443}:${XRAY_PORT:-443}
-      - ${API_PORT:-440}:${API_PORT:-440}
+      - '${XRAY_PORT:-443}:${XRAY_PORT:-443}'
+      - '${API_PORT:-440}:${API_PORT:-440}'
 
   watchtower:
     image: containrrr/watchtower
@@ -26,10 +25,10 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     environment:
-      - WATCHTOWER_POLL_INTERVAL=60
-      - WATCHTOWER_CLEANUP=true
-      - WATCHTOWER_INCLUDE_RESTARTING=true
-      - WATCHTOWER_ROLLING_RESTART=true
+      WATCHTOWER_POLL_INTERVAL: 60
+      WATCHTOWER_CLEANUP: 'true'
+      WATCHTOWER_INCLUDE_RESTARTING: 'true'
+      WATCHTOWER_ROLLING_RESTART: 'true'
     command: xray
     depends_on:
       - xray

@@ -1,29 +1,36 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
-import { exec } from 'child_process';
-import { promisify } from 'util';
-import { logger } from '../../common/logger/logger';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import { exec } from 'node:child_process';
+import { promisify } from 'node:util';
+
+const execAsync = promisify(exec);
 
 @Injectable()
 export class CommandsService {
-  public async runCommands(commands: string[]): Promise<string[]> {
+  private readonly logger = new Logger(CommandsService.name);
+
+  /** Runs commands one by one; stops on the first one that fails or writes to stderr. */
+  async runCommands(commands: string[]): Promise<string[]> {
     const result: string[] = [];
-    const execPromise = promisify(exec);
 
     for (const command of commands) {
+      let stdout: string;
+      let stderr: string;
+
       try {
-        const { stdout, stderr } = await execPromise(command);
-
-        if (stderr) {
-          logger.error(stderr);
-          throw new BadRequestException(stderr);
-        }
-
-        result.push(stdout);
-      } catch (stderr) {
-        logger.error(stderr);
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-        throw new BadRequestException(stderr?.stderr || stderr?.message);
+        ({ stdout, stderr } = await execAsync(command));
+      } catch (error) {
+        const { stderr: errStderr, message } = error as { stderr?: string; message?: string };
+        const reason = errStderr || message || String(error);
+        this.logger.error(reason);
+        throw new BadRequestException(reason);
       }
+
+      if (stderr) {
+        this.logger.error(stderr);
+        throw new BadRequestException(stderr);
+      }
+
+      result.push(stdout);
     }
 
     return result;

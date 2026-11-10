@@ -1,0 +1,61 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  ci:
+    uses: HUAYUN-vision/ci-cd-workflows/.github/workflows/node-ci.yml@v1
+    permissions:
+      contents: read
+    # secrets:
+    #   socket-token: ${{ secrets.SOCKET_API_KEY }} # Socket Firewall Enterprise
+
+  secret-scan:
+    uses: HUAYUN-vision/ci-cd-workflows/.github/workflows/secret-scan.yml@v1
+    permissions:
+      contents: read
+
+  # PR: сборка образа + Trivy, без публикации
+  docker-check:
+    if: github.event_name == 'pull_request'
+    uses: HUAYUN-vision/ci-cd-workflows/.github/workflows/docker.yml@v1
+    permissions:
+      contents: read
+      packages: write
+
+  version:
+    needs: [ci, secret-scan]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    uses: HUAYUN-vision/ci-cd-workflows/.github/workflows/version.yml@v1
+    permissions:
+      contents: write
+    # secrets:
+    #   token: ${{ secrets.RELEASE_TOKEN }} # если main защищена от прямого push
+
+  # main: публикация образа в GHCR после нового релиза
+  docker:
+    needs: version
+    if: needs.version.outputs.released == 'true'
+    uses: HUAYUN-vision/ci-cd-workflows/.github/workflows/docker.yml@v1
+    permissions:
+      contents: read
+      packages: write
+    with:
+      push: true
+      ref: ${{ needs.version.outputs.tag }}
+      version: ${{ needs.version.outputs.version }}
+
+  dependabot-auto-merge:
+    needs: [ci, secret-scan, docker-check]
+    if: github.event_name == 'pull_request' && github.event.pull_request.user.login == 'dependabot[bot]'
+    uses: HUAYUN-vision/ci-cd-workflows/.github/workflows/dependabot-auto-merge.yml@v1
+    permissions:
+      contents: write
+      pull-requests: write
