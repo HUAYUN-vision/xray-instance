@@ -2,7 +2,7 @@
 
 Docker-образ с [Xray](https://github.com/XTLS/Xray-core) (VLESS + Reality) и HTTP API на NestJS для управления инстансом.
 
-Проект построен на [`HUAYUN-vision/nestjs-template`](https://github.com/HUAYUN-vision/nestjs-template) и имеет с ним общую git-историю. Обновления шаблона подтягиваются обычным `git merge` (см. ниже).
+Проект построен на [`HUAYUN-vision/nestjs-template`](https://github.com/HUAYUN-vision/nestjs-template).
 
 ## Стек
 
@@ -110,26 +110,3 @@ src/
 xray/scripts/           # инициализация и запуск xray (entrypoint контейнера)
 test/                   # e2e-тесты
 ```
-
-## Синхронизация с шаблоном
-
-```bash
-# один раз
-git remote add template https://github.com/HUAYUN-vision/nestjs-template.git
-git config remote.template.tagOpt --no-tags
-
-# каждый раз
-git fetch template
-git checkout -b chore/sync-template
-git merge template/main
-# разрешить конфликты, затем:
-npm install
-npm run build && npm test
-git push -u origin chore/sync-template   # и открыть PR "chore: sync with nestjs-template"
-```
-
-Типичные конфликты:
-
-- **`package.json` → `version`, `name`**: всегда оставляйте значения проекта.
-- **`package-lock.json`**: не правьте руками. Возьмите любую сторону и выполните `npm install`.
-- **`Dockerfile`, `docker-compose.yml`**: в проекте они расширены под xray. Переносите изменения шаблона вручную.
