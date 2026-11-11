@@ -1,0 +1,14 @@
+name: PR title
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+concurrency:
+  group: pr-title-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  pr-title:
+    uses: HUAYUN-vision/ci-cd-workflows/.github/workflows/pr-title.yml@v1
+    permissions: {}

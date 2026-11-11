@@ -1,35 +1,27 @@
 import { NestFactory } from '@nestjs/core';
-import { AppModule } from './modules/app.module';
-import { Envs } from './common/envs/envs';
-import { ValidationPipe } from '@nestjs/common';
-import { logger } from './common/logger/logger';
-import { version } from '../package.json';
-import { usersInit } from './common/init/users.init';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { Logger } from 'nestjs-pino';
+import { AppModule } from './app.module';
+import { AppConfigService } from './config/app-config.service';
+import { setupApp } from './setup-app';
 
-async function bootstrap() {
-  await usersInit();
+async function bootstrap(): Promise<void> {
+  const app = await NestFactory.create(AppModule, { bufferLogs: true });
+  app.useLogger(app.get(Logger));
 
-  const app = await NestFactory.create(AppModule);
+  setupApp(app);
 
-  app.useGlobalPipes(
-    new ValidationPipe({
-      validateCustomDecorators: true,
-      whitelist: true,
-      transform: true,
-      transformOptions: { enableImplicitConversion: true },
-      skipMissingProperties: false,
-      validationError: {
-        target: true,
-        value: true,
-      },
-    }),
-  );
+  const config = app.get(AppConfigService);
 
-  await app.listen(Envs.app.port);
+  if (config.get('SWAGGER_ENABLED')) {
+    const document = SwaggerModule.createDocument(
+      app,
+      new DocumentBuilder().setTitle('API').setVersion('1.0').addBearerAuth().build(),
+    );
+    SwaggerModule.setup('docs', app, document);
+  }
 
-  logger.info(
-    `Server is running on url: ${await app.getUrl()} at ${Date()}. Version: '${version}'.`,
-  );
+  await app.listen(config.get('PORT'));
 }
 
-bootstrap().catch((err) => logger.error(err));
+void bootstrap();

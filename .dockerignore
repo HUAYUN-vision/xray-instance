@@ -1,0 +1,16 @@
+node_modules
+dist
+coverage
+.git
+.github
+.husky
+.vscode
+.idea
+.env
+.env.*
+!.env.example
+*.log
+Dockerfile
+docker-compose.yml
+xray/data
+xray/logs

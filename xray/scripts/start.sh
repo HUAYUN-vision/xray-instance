@@ -37,8 +37,11 @@ sleep 3
 
 bash ./init-users.sh
 
-echo "Starting NestJS..."
-node /app/dist/src/main &
+# API_PORT (старый docker-compose) имеет приоритет над PORT
+export PORT="${API_PORT:-${PORT:-3000}}"
+
+echo "Starting NestJS on port $PORT..."
+node /app/dist/main &
 
 sleep 2
 

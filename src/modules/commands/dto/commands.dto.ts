@@ -1,8 +1,9 @@
 import { ArrayMinSize, IsArray, IsString } from 'class-validator';
 
 export class CommandsDto {
-  @IsString({ each: true })
+  /** Shell commands, executed sequentially. */
   @IsArray()
   @ArrayMinSize(1)
+  @IsString({ each: true })
   readonly commands: string[];
 }
